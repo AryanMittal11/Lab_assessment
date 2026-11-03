@@ -1,4 +1,4 @@
-"""Upload API — PDF in, OCR handoff JSON out."""
+"""Upload API — PDF in, OCR handoff JSON out (no extract)."""
 
 from __future__ import annotations
 

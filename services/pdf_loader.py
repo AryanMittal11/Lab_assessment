@@ -31,3 +31,14 @@ def load_pdf_pages(pdf_path: str | Path, dpi: int = 200) -> list[np.ndarray]:
         raise ValueError(f"No pages found in PDF: {pdf_path}")
 
     return pages
+
+
+def extract_pdf_text(pdf_path: str | Path) -> str:
+    """Native PDF text layer (empty string if scan-only / no text)."""
+    pdf_path = Path(pdf_path)
+    doc = pymupdf.open(pdf_path)
+    try:
+        parts = [(page.get_text("text") or "").strip() for page in doc]
+    finally:
+        doc.close()
+    return "\n\n".join(p for p in parts if p)

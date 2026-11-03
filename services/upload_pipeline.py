@@ -1,4 +1,4 @@
-"""Orchestrates upload steps 1–3 and writes artifacts under uploads/."""
+"""Upload process: PDF → preprocess → OCR handoff. Does not extract."""
 
 from __future__ import annotations
 
@@ -10,7 +10,7 @@ from pathlib import Path
 import cv2
 
 from services.ocr import run_ocr
-from services.pdf_loader import load_pdf_pages
+from services.pdf_loader import extract_pdf_text, load_pdf_pages
 from services.preprocess import preprocess_image
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -35,6 +35,7 @@ def process_pdf_bytes(data: bytes, stem: str = "invoice") -> dict:
     pdf_path.write_bytes(data)
 
     pages = load_pdf_pages(pdf_path)
+    pdf_text = extract_pdf_text(pdf_path)
     for i, page in enumerate(pages):
         cv2.imwrite(str(job_dir / f"page{i}_original.png"), page)
 
@@ -44,7 +45,7 @@ def process_pdf_bytes(data: bytes, stem: str = "invoice") -> dict:
         cv2.imwrite(str(job_dir / f"page{i}_preprocessed.png"), processed)
 
         ocr_out = run_ocr(processed)
-        page_payload = {"page_index": i, **ocr_out}
+        page_payload = {"page_index": i, "pdf_text": pdf_text, **ocr_out}
         page_results.append(page_payload)
         (job_dir / f"page{i}_ocr.json").write_text(
             json.dumps(page_payload, indent=2),
@@ -56,6 +57,7 @@ def process_pdf_bytes(data: bytes, stem: str = "invoice") -> dict:
         "source_stem": stem,
         "page_count": len(pages),
         "upload_dir": str(job_dir),
+        "pdf_text": pdf_text,
         "pages": page_results,
     }
     (job_dir / "ocr_handoff.json").write_text(

@@ -1,9 +1,11 @@
 fastapi
 uvicorn[standard]
 python-multipart
+python-dotenv
 pymupdf
 opencv-python-headless
 numpy
 Pillow
 paddlepaddle
 paddleocr
+groq
